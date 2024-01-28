@@ -15,6 +15,10 @@ class _HomeState extends State<Home> {
   SqlDb sqlDb = SqlDb();
   bool isLoading = true;
   List notes = [];
+<<<<<<< HEAD
+=======
+
+>>>>>>> b8caef9 (.)
   Future readData() async {
     List<Map> response = await sqlDb.selectData("SELECT * FROM notes ");
     notes.addAll(response);
@@ -31,6 +35,18 @@ class _HomeState extends State<Home> {
     super.initState();
   }
 
+<<<<<<< HEAD
+=======
+  int oneOrZero(bool value) {
+    return value == true ? 1 : 0;
+  }
+
+  // bool checkBoxChange(int index) {
+  //   return notes[index]['taskCompleted'] == 1 ? true : false;
+  // }
+
+  bool isCompeleted = false;
+>>>>>>> b8caef9 (.)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +83,32 @@ class _HomeState extends State<Home> {
                             borderRadius: BorderRadius.circular(16)),
                         color: Colors.yellow[300],
                         child: ListTile(
+<<<<<<< HEAD
                           title: Text(notes[index]['note']),
+=======
+                          title: Row(
+                            children: [
+                              Checkbox(
+                                  value: isCompeleted,
+                                  onChanged: (newBool) async {
+                                    int result = await sqlDb.updateData(''' 
+                                    UPDATE notes
+                                    SET  taskCompleted= ${oneOrZero(isCompeleted)}
+                                      WHERE  id =${notes[index]['id']}; 
+                                                                            
+                                    ''');
+
+                                    if (result == 1) {
+                                      setState(() {});
+                                      log(notes[index]['taskCompleted']
+                                          .toString());
+                                    }
+                                    setState(() {});
+                                  }),
+                              Text(notes[index]['note']),
+                            ],
+                          ),
+>>>>>>> b8caef9 (.)
                           subtitle: Text(
                             notes[index]['title'],
                           ),
@@ -78,7 +119,11 @@ class _HomeState extends State<Home> {
                                 onPressed: () async {
                                   int response = await sqlDb.DeleteData(
                                       "DELETE FROM NOTES WHERE id= ${notes[index]['id']} ");
+<<<<<<< HEAD
                                   if (response  > 0) {
+=======
+                                  if (response > 0) {
+>>>>>>> b8caef9 (.)
                                     notes.removeWhere(
                                       (element) =>
                                           element['id'] == notes[index]['id'],
@@ -91,7 +136,10 @@ class _HomeState extends State<Home> {
                                   color: Colors.red,
                                 ),
                               ),
+<<<<<<< HEAD
 
+=======
+>>>>>>> b8caef9 (.)
                               IconButton(
                                 onPressed: () {
                                   Navigator.of(context).push(
