@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:to_do_sqflite/screens/edit_notes.dart';
 import 'package:to_do_sqflite/sqldb.dart';
@@ -13,139 +11,121 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   SqlDb sqlDb = SqlDb();
-  bool isLoading = true;
-  List notes = [];
 
-  Future readData() async {
-    List<Map> response = await sqlDb.selectData("SELECT * FROM notes ");
-    notes.addAll(response);
-    isLoading = false;
-    if (this.mounted) {
-      setState(() {});
-    }
+  Future<List<Map>> fetchData() async {
+    return await sqlDb.selectData("SELECT * FROM notes ");
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    readData();
-    super.initState();
-  }
-
-  int oneOrZero(bool value) {
-    return value == true ? 1 : 0;
-  }
-
-  // bool checkBoxChange(int index) {
-  //   return notes[index]['taskCompleted'] == 1 ? true : false;
-  // }
-
-  bool isCompeleted = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.yellow[200],
-        appBar: AppBar(
-          title: Text(
-            'TO DO',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.yellow[300],
+      backgroundColor: Colors.yellow[200],
+      appBar: AppBar(
+        title: Text(
+          'TO DO',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.pushNamed(context, 'addnotes');
-          },
-          child: Icon(Icons.add),
-        ),
-        body: Container(
-          child: ListView(
-            children: [
-              ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: notes.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-                    child: Card(
-                        semanticContainer: true,
-                        clipBehavior: Clip.hardEdge,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        color: Colors.yellow[300],
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              Checkbox(
-                                  value: isCompeleted,
-                                  onChanged: (newBool) async {
-                                    int result = await sqlDb.updateData(''' 
-                                    UPDATE notes
-                                    SET  taskCompleted= ${oneOrZero(isCompeleted)}
-                                      WHERE  id =${notes[index]['id']}; 
-                                                                            
-                                    ''');
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.yellow[300],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, 'addnotes');
+        },
+        child: Icon(Icons.add),
+      ),
+      body: FutureBuilder(
+        future: fetchData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            List notes = snapshot.data as List;
 
-                                    if (result == 1) {
-                                      setState(() {});
-                                      log(notes[index]['taskCompleted']
-                                          .toString());
-                                    }
-                                    setState(() {});
-                                  }),
-                              Text(notes[index]['note']),
-                            ],
-                          ),
-                          subtitle: Text(
-                            notes[index]['title'],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () async {
-                                  int response = await sqlDb.DeleteData(
-                                      "DELETE FROM NOTES WHERE id= ${notes[index]['id']} ");
-                                  if (response > 0) {
-                                    notes.removeWhere(
-                                      (element) =>
-                                          element['id'] == notes[index]['id'],
-                                    );
-                                    setState(() {});
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
+            return ListView.builder(
+              itemCount: notes.length,
+              itemBuilder: (context, index) {
+                bool isCompleted = notes[index]['taskCompleted'] == 1;
+
+                return Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                  child: Card(
+                    color: Colors.black87,
+                    child: Card(
+                      color: Colors.yellow.shade300,
+                      child: ListTile(
+                        title: Row(
+                          children: [
+                            Checkbox(
+                              value: isCompleted,
+                              onChanged: (newBool) async {
+                                await sqlDb.updateData('''
+                            UPDATE notes
+                            SET  taskCompleted= ${newBool! ? 1 : 0}
+                                  WHERE  id = ${notes[index]['id']}; 
+                                ''');
+
+                                setState(() {});
+                              },
+                            ),
+                            notes[index]['taskCompleted'] == 1
+                                ? Text(
+                                    notes[index]['note'],
+                                    style: TextStyle(
+                                        decoration: TextDecoration.lineThrough),
+                                  )
+                                : Text(notes[index]['note'])
+                          ],
+                        ),
+                        subtitle: Text(
+                          notes[index]['title'],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () async {
+                                int response = await sqlDb.DeleteData(
+                                    "DELETE FROM notes WHERE id= ${notes[index]['id']} ");
+
+                                setState(() {});
+                              },
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) {
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) {
+                                    // Navigate to the edit page with necessary data
                                     return EditNote(
                                       note: notes[index]['note'],
                                       tilte: notes[index]['title'],
                                       id: notes[index]['id'],
                                     );
-                                  }));
-                                },
-                                icon: const Icon(
-                                  Icons.mode_edit_outline_outlined,
-                                ),
+                                  }),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.mode_edit_outline_outlined,
                               ),
-                            ],
-                          ),
-                        )),
-                  );
-                },
-              ),
-              MaterialButton(onPressed: () async {})
-            ],
-          ),
-        ));
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
   }
 }

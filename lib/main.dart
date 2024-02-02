@@ -9,10 +9,7 @@ SharedPreferences? _preferences;
 void main() {
   runApp(
     MaterialApp(
-<<<<<<< HEAD
-=======
       debugShowCheckedModeBanner: false,
->>>>>>> b8caef9 (.)
       home: WelcomeScreen(),
       routes: {'addnotes': (context) => const AddNotes()},
     ),
